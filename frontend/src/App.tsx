@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Sidebar, { type ViewType } from './components/Sidebar';
 import ListView from './components/ListView';
 import ItemModal from './components/ItemModal';
+import ConfirmModal from './components/ConfirmModal';
 import type { AppData, PasswordEntry, ApiKeyEntry } from './types';
 
 function App() {
@@ -9,6 +10,9 @@ function App() {
   const [data, setData] = useState<AppData>({ passwords: [], apiKeys: [] });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+
+  // Confirmation Modal state
+  const [confirmModalState, setConfirmModalState] = useState<{isOpen: boolean, itemId: string | null}>({ isOpen: false, itemId: null });
 
   useEffect(() => {
     loadData();
@@ -86,15 +90,19 @@ function App() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this item?')) {
-      const newData = { ...data };
-      if (currentView === 'passwords') {
-        newData.passwords = newData.passwords.filter(p => p.id !== id);
-      } else {
-        newData.apiKeys = newData.apiKeys.filter(a => a.id !== id);
-      }
-      saveData(newData);
+    setConfirmModalState({ isOpen: true, itemId: id });
+  };
+
+  const performDelete = () => {
+    if (!confirmModalState.itemId) return;
+    const newData = { ...data };
+    if (currentView === 'passwords') {
+      newData.passwords = newData.passwords.filter(p => p.id !== confirmModalState.itemId);
+    } else {
+      newData.apiKeys = newData.apiKeys.filter(a => a.id !== confirmModalState.itemId);
     }
+    saveData(newData);
+    setConfirmModalState({ isOpen: false, itemId: null });
   };
 
   const handleSaveItem = (itemData: any) => {
@@ -169,6 +177,13 @@ function App() {
         initialData={editingItem}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveItem}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModalState.isOpen}
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        onConfirm={performDelete}
+        onCancel={() => setConfirmModalState({ isOpen: false, itemId: null })}
       />
     </div>
   );
