@@ -53,9 +53,9 @@ app.on('window-all-closed', function () {
 });
 
 // IPC Handlers
-ipcMain.handle('get-data', () => {
+ipcMain.handle('get-data', async () => {
   try {
-    const data = fs.readFileSync(dataFilePath, 'utf8');
+    const data = await fs.promises.readFile(dataFilePath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
     console.error('Failed to read data:', error);
@@ -63,9 +63,9 @@ ipcMain.handle('get-data', () => {
   }
 });
 
-ipcMain.handle('save-data', (event, data) => {
+ipcMain.handle('save-data', async (event, data) => {
   try {
-    fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf8');
+    await fs.promises.writeFile(dataFilePath, JSON.stringify(data, null, 2), 'utf8');
     return { success: true };
   } catch (error) {
     console.error('Failed to save data:', error);
@@ -75,7 +75,7 @@ ipcMain.handle('save-data', (event, data) => {
 
 ipcMain.handle('export-data', async () => {
   try {
-    const data = fs.readFileSync(dataFilePath, 'utf8');
+    const data = await fs.promises.readFile(dataFilePath, 'utf8');
     const { filePath } = await dialog.showSaveDialog({
       title: 'Export Data',
       defaultPath: 'my-app-data.json',
@@ -83,7 +83,7 @@ ipcMain.handle('export-data', async () => {
     });
 
     if (filePath) {
-      fs.writeFileSync(filePath, data, 'utf8');
+      await fs.promises.writeFile(filePath, data, 'utf8');
       return { success: true, path: filePath };
     }
     return { success: false, error: 'Cancelled' };
@@ -102,13 +102,13 @@ ipcMain.handle('import-data', async () => {
     });
 
     if (filePaths && filePaths.length > 0) {
-      const importedDataStr = fs.readFileSync(filePaths[0], 'utf8');
+      const importedDataStr = await fs.promises.readFile(filePaths[0], 'utf8');
       const importedData = JSON.parse(importedDataStr);
 
       // Basic validation
       if (importedData && (Array.isArray(importedData.passwords) || Array.isArray(importedData.apiKeys))) {
         // Merge or replace data. Here we replace for simplicity.
-        fs.writeFileSync(dataFilePath, JSON.stringify(importedData, null, 2), 'utf8');
+        await fs.promises.writeFile(dataFilePath, JSON.stringify(importedData, null, 2), 'utf8');
         return { success: true, data: importedData };
       } else {
         return { success: false, error: 'Invalid data format' };
