@@ -107,9 +107,22 @@ ipcMain.handle('import-data', async () => {
 
       // Basic validation
       if (importedData && (Array.isArray(importedData.passwords) || Array.isArray(importedData.apiKeys))) {
-        // Merge or replace data. Here we replace for simplicity.
-        await fs.promises.writeFile(dataFilePath, JSON.stringify(importedData, null, 2), 'utf8');
-        return { success: true, data: importedData };
+        // Confirm before overwriting
+        const response = await dialog.showMessageBox({
+          type: 'warning',
+          buttons: ['Overwrite', 'Cancel'],
+          defaultId: 1,
+          cancelId: 1,
+          title: 'Confirm Import',
+          message: 'Are you sure you want to import this data? Your current data will be overwritten and lost.',
+        });
+
+        if (response.response === 0) { // Overwrite clicked
+          await fs.promises.writeFile(dataFilePath, JSON.stringify(importedData, null, 2), 'utf8');
+          return { success: true, data: importedData };
+        } else {
+          return { success: false, error: 'Cancelled' };
+        }
       } else {
         return { success: false, error: 'Invalid data format' };
       }
