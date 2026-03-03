@@ -1,0 +1,42 @@
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "description": "A clean offline password and API key manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development electron .",
+    "dev": "concurrently -k \"npm run dev -w frontend\" \"wait-on http://localhost:5173 && npm start\"",
+    "build": "npm run build -w frontend && electron-builder"
+  },
+  "build": {
+    "appId": "com.jules.app",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "frontend/dist/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "wait-on": "^7.2.0"
+  }
+}
